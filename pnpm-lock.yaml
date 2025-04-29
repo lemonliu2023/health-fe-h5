@@ -8,9 +8,9 @@ importers:
 
   .:
     dependencies:
-      '@mediapipe/tasks-vision':
-        specifier: 0.10.22-rc.20250304
-        version: 0.10.22-rc.20250304
+      '@mediapipe/pose':
+        specifier: ^0.5.1675469404
+        version: 0.5.1675469404
       framework7:
         specifier: ^8.3.4
         version: 8.3.4
@@ -62,8 +62,8 @@ packages:
     resolution: {integrity: sha512-VtPOkrdPHZsKc/clNqyi9WUA8TINkZ4cGk63UUE3u4pmB2k+ZMQRDuIOagv8UVd6j7k0T3+RRIb7beKTebNbcw==}
     engines: {node: '>=6.9.0'}
 
-  '@mediapipe/tasks-vision@0.10.22-rc.20250304':
-    resolution: {integrity: sha512-dElxVXMFGthshfIj+qAVm8KE2jmNo2p8oXFib8WzEjb7GNaX/ClWBc8UJfoSZwjEMVrdHJ4YUfa7P3ifl6MIWw==}
+  '@mediapipe/pose@0.5.1675469404':
+    resolution: {integrity: sha512-DFZsNWTsSphRIZppnUCuunzBiHP2FdJXR9ehc7mMi4KG+oPaOH0Em3d6kr7Py+TSyTXC1doH88KcF28k2sBxsQ==}
 
   '@module-federation/error-codes@0.13.0':
     resolution: {integrity: sha512-4soAMLr7qcVWuvCsyRmBbiBfuhxmnDeyl+qzjMx8VurQgL+XQDQJapM9RXngNGT4g8FoCq9o7rM5YWNgFFNUiw==}
@@ -509,7 +509,7 @@ snapshots:
     dependencies:
       regenerator-runtime: 0.14.1
 
-  '@mediapipe/tasks-vision@0.10.22-rc.20250304': {}
+  '@mediapipe/pose@0.5.1675469404': {}
 
   '@module-federation/error-codes@0.13.0': {}
 

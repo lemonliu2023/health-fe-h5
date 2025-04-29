@@ -9,7 +9,7 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
-    "@mediapipe/tasks-vision": "0.10.22-rc.20250304",
+    "@mediapipe/pose": "^0.5.1675469404",
     "framework7": "^8.3.4",
     "framework7-react": "^8.3.4",
     "react": "^18.3.1",

@@ -35,7 +35,7 @@ const AppMain = () => {
           </Toolbar>
           {/* Page Content */}
           <div className="p-4">
-            <Button fill onClick={() => f7.views.main.router.navigate('/deepSquat')}>深蹲训练</Button>
+            <Button fill large onClick={() => f7.views.main.router.navigate('/deepSquat')}>深蹲训练</Button>
           </div>
         </Page>
       </View>
