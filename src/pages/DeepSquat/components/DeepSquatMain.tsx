@@ -113,13 +113,13 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
       }
       videoRef.current.addEventListener('loadedmetadata', function () {
         if (canvasRef.current) {
-          startPoseDetection();
           canvasRef.current.width = videoRef.current?.videoWidth || 0;
           canvasRef.current.height = videoRef.current?.videoHeight || 0;
           resizeCanvas();
         }
       });
     }
+    startPoseDetection();
     needRequestAnimationFrame = true;
     setEnableCamera(true);
     const audio = rewardSoundRef.current;
