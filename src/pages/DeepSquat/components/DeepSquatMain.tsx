@@ -2,7 +2,6 @@ import { Button, f7 } from 'framework7-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pose, NormalizedLandmark, NormalizedLandmarkList, Results, POSE_CONNECTIONS } from '@mediapipe/pose';
 
-
 let lastText = '';
 
 let needRequestAnimationFrame = false;
@@ -114,7 +113,6 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
         videoRef.current.srcObject = streamOrSrc;
       }
       videoRef.current.addEventListener('loadedmetadata', function () {
-
         if (canvasRef.current) {
           canvasRef.current.width = videoRef.current?.videoWidth || 0;
           canvasRef.current.height = videoRef.current?.videoHeight || 0;
@@ -240,13 +238,20 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
   const detectSquat = (landmarks: NormalizedLandmarkList) => {
     const { kneeAvgAngle, leftAnkle, leftHip, leftKnee, rightAnkle, rightKnee, rightHip } = getKneeData(landmarks);
 
-    if(!isLandmarkVisible(leftKnee) || !isLandmarkVisible(leftAnkle) || !isLandmarkVisible(leftHip) || !isLandmarkVisible(rightKnee) || !isLandmarkVisible(rightAnkle) || !isLandmarkVisible(rightHip)) {
+    if (
+      !isLandmarkVisible(leftKnee) ||
+      !isLandmarkVisible(leftAnkle) ||
+      !isLandmarkVisible(leftHip) ||
+      !isLandmarkVisible(rightKnee) ||
+      !isLandmarkVisible(rightAnkle) ||
+      !isLandmarkVisible(rightHip)
+    ) {
       const msg = '请露出膝盖和脚踝';
       if (msg !== lastText) {
         f7.toast.show({
           text: msg,
           position: 'center',
-          closeTimeout: 2000
+          closeTimeout: 2000,
         });
         setTimeout(() => {
           lastText = '';
@@ -269,21 +274,22 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
     }
   };
 
-
   const stopExec = () => {
     setEnableCamera(false);
     needRequestAnimationFrame = false;
     if (videoRef.current) {
       videoRef.current.pause();
+      videoRef.current.src = '';
+      videoRef.current.srcObject = null;
     }
     setSquatCount(0);
-  }
+  };
 
   return (
     <>
       <div className="relative bg-[#000]" style={{ width, height: height - 44, display: enableCamera ? 'block' : 'none', overflow: 'hidden' }}>
         <div id="render-wrapper" className="flex justify-center items-center">
-          <video className="fixed bottom-0 left-0 w-40" ref={videoRef} autoPlay playsInline loop controls />
+          <video ref={videoRef} autoPlay playsInline loop style={{ display: 'none' }} />
           <canvas ref={canvasRef} width={width} height={height - 44} />
         </div>
         <div
