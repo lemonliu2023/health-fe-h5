@@ -98,6 +98,8 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
 
     canvasRef.current.style.width = `${renderWidth}px`;
     canvasRef.current.style.height = `${renderHeight}px`;
+    canvasRef.current.width = renderWidth;
+    canvasRef.current.height = renderHeight;
   }, [width, height]);
 
   useEffect(() => {
@@ -119,8 +121,8 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
         }
       });
     }
-    startPoseDetection();
     needRequestAnimationFrame = true;
+    startPoseDetection();
     setEnableCamera(true);
     const audio = rewardSoundRef.current;
     audio?.play().then(() => {
@@ -199,7 +201,7 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
     for (const landmark of landmarks) {
       if (isLandmarkVisible(landmark)) {
         canvasCtx.beginPath();
-        canvasCtx.arc((1 - landmark.x) * canvasElement.width, landmark.y * canvasElement.height, 5, 0, 2 * Math.PI);
+        canvasCtx.arc((1 - landmark.x) * canvasElement.width, landmark.y * canvasElement.height, 2, 0, 2 * Math.PI);
         canvasCtx.fill();
       }
     }
@@ -209,13 +211,13 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
     const kneeAngle = leftKneeAngle;
 
     if (isLandmarkVisible(leftKnee)) {
-      canvasCtx.font = '40px Arial';
+      canvasCtx.font = '24px Arial';
       canvasCtx.fillStyle = 'white';
       canvasCtx.fillText(`${Math.round(kneeAngle)}°`, (1 - leftKnee.x) * canvasElement.width + 10, leftKnee.y * canvasElement.height - 10);
     }
 
     if (isLandmarkVisible(rightKnee)) {
-      canvasCtx.font = '40px Arial';
+      canvasCtx.font = '24px Arial';
       canvasCtx.fillStyle = 'white';
       canvasCtx.fillText(`${Math.round(rightKneeAngle)}°`, (1 - rightKnee.x) * canvasElement.width + 10, rightKnee.y * canvasElement.height - 10);
     }
