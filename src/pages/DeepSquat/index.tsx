@@ -31,7 +31,7 @@ function DeepSquat() {
     poseRef.current = new Pose({
       locateFile: (file) => {
         console.log(file, 'file');
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+        return `${window.location.href}/${file}`;
       },
     });
     poseRef.current.setOptions({
@@ -53,7 +53,7 @@ function DeepSquat() {
       <div className="grid place-items-center h-full">
         <div className="m-auto">
           {loadingModel ? (
-            <div className="w-80 px-2">
+            <div className="w-screen px-10">
               <div className="my-2 text-center">模型加载中...</div>
               <Progressbar progress={progress * 100} />
             </div>

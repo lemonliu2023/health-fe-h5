@@ -114,6 +114,7 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
         videoRef.current.srcObject = streamOrSrc;
       }
       videoRef.current.addEventListener('loadedmetadata', function () {
+
         if (canvasRef.current) {
           canvasRef.current.width = videoRef.current?.videoWidth || 0;
           canvasRef.current.height = videoRef.current?.videoHeight || 0;
@@ -282,7 +283,7 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
     <>
       <div className="relative bg-[#000]" style={{ width, height: height - 44, display: enableCamera ? 'block' : 'none', overflow: 'hidden' }}>
         <div id="render-wrapper" className="flex justify-center items-center">
-          <video ref={videoRef} autoPlay playsInline loop style={{ display: 'none' }} />
+          <video className="fixed bottom-0 left-0 w-40" ref={videoRef} autoPlay playsInline loop controls />
           <canvas ref={canvasRef} width={width} height={height - 44} />
         </div>
         <div
@@ -302,7 +303,7 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
         </div>
       </div>
       <div style={{ display: enableCamera ? 'none' : 'flex' }} className="flex-col items-center p-2 pt-4">
-        <div className="w-1/2 mb-4">
+        <div className="w-40 mb-4">
           <Button large fill onClick={enableCamHandler}>
             开始自主训练
           </Button>
