@@ -1,6 +1,11 @@
-import { Button } from 'framework7-react';
+import { Button, f7 } from 'framework7-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pose, NormalizedLandmark, NormalizedLandmarkList, Results, POSE_CONNECTIONS } from '@mediapipe/pose';
+
+
+let lastText = '';
+
+let needRequestAnimationFrame = false;
 
 function getKneeData(landmarks: NormalizedLandmarkList) {
   const leftHip = landmarks[23];
@@ -92,7 +97,7 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
     }
 
     canvasRef.current.style.width = `${renderWidth}px`;
-    canvasRef.current.style.height = `${renderHeight - 44}px`;
+    canvasRef.current.style.height = `${renderHeight}px`;
   }, [width, height]);
 
   useEffect(() => {
@@ -108,14 +113,15 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
       }
       videoRef.current.addEventListener('loadedmetadata', function () {
         if (canvasRef.current) {
+          startPoseDetection();
           canvasRef.current.width = videoRef.current?.videoWidth || 0;
           canvasRef.current.height = videoRef.current?.videoHeight || 0;
           resizeCanvas();
         }
       });
     }
+    needRequestAnimationFrame = true;
     setEnableCamera(true);
-    startPoseDetection();
     const audio = rewardSoundRef.current;
     audio?.play().then(() => {
       audio.pause();
@@ -124,7 +130,7 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
     });
   };
 
-  const enableCamHandler = useCallback(() => {
+  const enableCamHandler = () => {
     getCameraStream()
       .then((stream) => {
         startDeepSquat(stream);
@@ -132,25 +138,25 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
       .catch((err) => {
         console.error('Camera error:', err);
       });
-  }, []);
+  };
 
   const previewVideo = (src: string) => {
     startDeepSquat(src);
   };
 
-  const startPoseDetection = useCallback(async () => {
+  const startPoseDetection = async () => {
     poseRef.current?.onResults(onResults);
     async function processFrame() {
-      if (!videoRef.current) return;
+      if (!videoRef.current || !needRequestAnimationFrame) return;
       if (videoRef.current.readyState >= 2) {
         poseRef.current?.send({ image: videoRef.current });
       }
       requestAnimationFrame(processFrame);
     }
     processFrame();
-  }, []);
+  };
 
-  const onResults = useCallback((results: Results) => {
+  const onResults = (results: Results) => {
     const canvasCtx = canvasCtxRef.current;
     const videoElement = videoRef.current;
     const canvasElement = canvasRef.current;
@@ -167,9 +173,9 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
       drawLandmarks(results.poseLandmarks);
       detectSquat(results.poseLandmarks);
     }
-  }, []);
+  };
 
-  const drawLandmarks = useCallback((landmarks: NormalizedLandmarkList) => {
+  const drawLandmarks = (landmarks: NormalizedLandmarkList) => {
     const canvasCtx = canvasCtxRef.current;
     const canvasElement = canvasRef.current;
     if (!canvasCtx || !canvasElement) return;
@@ -213,23 +219,39 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
       canvasCtx.fillStyle = 'white';
       canvasCtx.fillText(`${Math.round(rightKneeAngle)}°`, (1 - rightKnee.x) * canvasElement.width + 10, rightKnee.y * canvasElement.height - 10);
     }
-  }, []);
+  };
 
-  const onSuccess = useCallback(() => {
+  const onSuccess = () => {
     const rewardSound = rewardSoundRef.current;
     setSquatCount((prevCount) => prevCount + 1);
     rewardSound?.play().catch((err) => console.error('音效播放失败:', err));
-  }, []);
+  };
 
   // 判断关键点是否可见
-  const isLandmarkVisible = useCallback((landmark: NormalizedLandmark) => {
+  const isLandmarkVisible = (landmark: NormalizedLandmark) => {
     if (landmark.visibility! < 0.5) return false;
     return landmark.x >= 0 && landmark.x <= 1 && landmark.y >= 0 && landmark.y <= 1;
-  }, []);
+  };
 
   // 检测深蹲动作
-  const detectSquat = useCallback((landmarks: NormalizedLandmarkList) => {
-    const { kneeAvgAngle } = getKneeData(landmarks);
+  const detectSquat = (landmarks: NormalizedLandmarkList) => {
+    const { kneeAvgAngle, leftAnkle, leftHip, leftKnee, rightAnkle, rightKnee, rightHip } = getKneeData(landmarks);
+
+    if(!isLandmarkVisible(leftKnee) || !isLandmarkVisible(leftAnkle) || !isLandmarkVisible(leftHip) || !isLandmarkVisible(rightKnee) || !isLandmarkVisible(rightAnkle) || !isLandmarkVisible(rightHip)) {
+      const msg = '请露出膝盖和脚踝';
+      if (msg !== lastText) {
+        f7.toast.show({
+          text: msg,
+          position: 'center',
+          closeTimeout: 2000
+        });
+        setTimeout(() => {
+          lastText = '';
+        }, 2000);
+        lastText = msg;
+      }
+      return;
+    }
 
     if (kneeAvgAngle < 120 && squatStateRef.current === 'standing') {
       squatStateRef.current = 'squatting';
@@ -242,13 +264,23 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
         onSuccess();
       }
     }
-  }, []);
+  };
+
+
+  const stopExec = () => {
+    setEnableCamera(false);
+    needRequestAnimationFrame = false;
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setSquatCount(0);
+  }
 
   return (
     <>
-      <div className="relative bg-[#000]" style={{ width, height: height - 44, display: enableCamera ? 'block' : 'none' }}>
+      <div className="relative bg-[#000]" style={{ width, height: height - 44, display: enableCamera ? 'block' : 'none', overflow: 'hidden' }}>
         <div id="render-wrapper" className="flex justify-center items-center">
-          <video ref={videoRef} autoPlay playsInline style={{ display: 'none' }} />
+          <video ref={videoRef} autoPlay playsInline loop style={{ display: 'none' }} />
           <canvas ref={canvasRef} width={width} height={height - 44} />
         </div>
         <div
@@ -261,15 +293,20 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
         >
           深蹲次数: {squatCount}
         </div>
+        <div className="fixed left-1/2 bottom-10 -translate-x-1/2">
+          <Button large fill onClick={stopExec}>
+            结束训练
+          </Button>
+        </div>
       </div>
       <div style={{ display: enableCamera ? 'none' : 'flex' }} className="flex-col items-center p-2 pt-4">
         <div className="w-1/2 mb-4">
           <Button large fill onClick={enableCamHandler}>
-            开始训练(摄像头)
+            开始自主训练
           </Button>
         </div>
         {videoData.map((item, index) => (
-          <video onClick={() => previewVideo(item)} className="w-full h-auto mb-4" key={index} src={item} playsInline muted />
+          <video onClick={() => previewVideo(item)} className="w-full h-auto mb-4" key={index} src={`${item}#t=0.001`} playsInline muted />
         ))}
       </div>
     </>
