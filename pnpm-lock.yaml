@@ -14,6 +14,9 @@ importers:
       framework7:
         specifier: ^8.3.4
         version: 8.3.4
+      framework7-icons:
+        specifier: ^5.0.5
+        version: 5.0.5
       framework7-react:
         specifier: ^8.3.4
         version: 8.3.4
@@ -308,6 +311,10 @@ packages:
 
   error-stack-parser@2.1.4:
     resolution: {integrity: sha512-Sk5V6wVazPhq5MhpO+AUxJn5x7XSXGl1R93Vn7i+zS15KDVxQijejNCrz8340/2bgLBjR9GtEG8ZVKONDjcqGQ==}
+
+  framework7-icons@5.0.5:
+    resolution: {integrity: sha512-bvHMLyujV9TFuudehd3ORZ/EvNp19Ir3ckVzYAOf3MkLymHba/9oHLsgopCh0x5UsrYZUpkrE+fd7ggj5y4wRw==}
+    engines: {node: '>= 0.10.0'}
 
   framework7-react@8.3.4:
     resolution: {integrity: sha512-5nMdMCK0cNXdFIt65v7I5Y0N2kyCm7KseAzFtarPgwOj0vTh2e5Ub0lGWkb+3l6LapGoP78MtGhDj8P7nHrGGw==}
@@ -726,6 +733,8 @@ snapshots:
   error-stack-parser@2.1.4:
     dependencies:
       stackframe: 1.3.4
+
+  framework7-icons@5.0.5: {}
 
   framework7-react@8.3.4: {}
 

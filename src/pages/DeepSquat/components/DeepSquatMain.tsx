@@ -6,15 +6,17 @@ let lastText = '';
 
 let needRequestAnimationFrame = false;
 
-function getKneeData(landmarks: NormalizedLandmarkList) {
+export type Dimensionality = '2D' | '3D';
+
+function getKneeData(landmarks: NormalizedLandmarkList, dimensionality: Dimensionality = '2D') {
   const leftHip = landmarks[23];
   const rightHip = landmarks[24];
   const leftKnee = landmarks[25];
   const rightKnee = landmarks[26];
   const leftAnkle = landmarks[27];
   const rightAnkle = landmarks[28];
-  const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
-  const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle);
+  const leftKneeAngle = dimensionality === '2D' ? calculate2DAngle(leftHip, leftKnee, leftAnkle) : calculate3DAngle(leftHip, leftKnee, leftAnkle);
+  const rightKneeAngle = dimensionality === '2D' ? calculate2DAngle(rightHip, rightKnee, rightAnkle) : calculate3DAngle(rightHip, rightKnee, rightAnkle);
   const kneeAvgAngle = (leftKneeAngle + rightKneeAngle) / 2;
   return {
     leftKneeAngle,
@@ -29,7 +31,32 @@ function getKneeData(landmarks: NormalizedLandmarkList) {
   };
 }
 
-function calculateAngle(a: NormalizedLandmark, b: NormalizedLandmark, c: NormalizedLandmark) {
+function calculate3DAngle(a: NormalizedLandmark, b: NormalizedLandmark, c: NormalizedLandmark) {
+  // 向量 BA = A - B, BC = C - B
+  const BA = {
+    x: a.x - b.x,
+    y: a.y - b.y,
+    z: a.z - b.z,
+  };
+  const BC = {
+    x: c.x - b.x,
+    y: c.y - b.y,
+    z: c.z - b.z,
+  };
+  // 点积 BA·BC
+  const dotProduct = BA.x * BC.x + BA.y * BC.y + BA.z * BC.z;
+  // 向量模长
+  const magnitudeBA = Math.hypot(BA.x, BA.y, BA.z);
+  const magnitudeBC = Math.hypot(BC.x, BC.y, BC.z);
+  // 防止除以零或浮点误差超出 acos 范围
+  let cosTheta = dotProduct / (magnitudeBA * magnitudeBC);
+  cosTheta = Math.min(1, Math.max(-1, cosTheta));
+  // 求角度（弧度转角度）
+  const angleRad = Math.acos(cosTheta);
+  return angleRad * (180 / Math.PI);
+}
+
+function calculate2DAngle(a: NormalizedLandmark, b: NormalizedLandmark, c: NormalizedLandmark) {
   const ab = { x: a.x - b.x, y: a.y - b.y };
   const cb = { x: c.x - b.x, y: c.y - b.y };
   const dot = ab.x * cb.x + ab.y * cb.y;
@@ -60,7 +87,17 @@ function getCameraStream(): Promise<MediaStream> {
 
 let lastTimeStamp = 0;
 
-function DeepSquat({ width, height, poseRef }: { width: number; height: number; poseRef: React.RefObject<Pose | undefined> }) {
+function DeepSquat({
+  width,
+  height,
+  poseRef,
+  dimensionality,
+}: {
+  width: number;
+  height: number;
+  poseRef: React.RefObject<Pose | undefined>;
+  dimensionality: Dimensionality;
+}) {
   const [enableCamera, setEnableCamera] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -118,6 +155,9 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
           canvasRef.current.height = videoRef.current?.videoHeight || 0;
           resizeCanvas();
         }
+      });
+      videoRef.current.addEventListener('ended', () => {
+        squatStateRef.current = 'standing';
       });
     }
     needRequestAnimationFrame = true;
@@ -206,7 +246,7 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
     }
 
     // 显示膝盖弯曲角度
-    const { leftKneeAngle, leftKnee, rightKneeAngle, rightKnee } = getKneeData(landmarks);
+    const { leftKneeAngle, leftKnee, rightKneeAngle, rightKnee } = getKneeData(landmarks, dimensionality);
     const kneeAngle = leftKneeAngle;
 
     if (isLandmarkVisible(leftKnee)) {
@@ -236,16 +276,14 @@ function DeepSquat({ width, height, poseRef }: { width: number; height: number; 
 
   // 检测深蹲动作
   const detectSquat = (landmarks: NormalizedLandmarkList) => {
-    const { kneeAvgAngle, leftAnkle, leftHip, leftKnee, rightAnkle, rightKnee, rightHip } = getKneeData(landmarks);
+    const { kneeAvgAngle, leftAnkle, leftHip, leftKnee, rightAnkle, rightKnee, rightHip } = getKneeData(
+      landmarks,
+      dimensionality
+    );
+    const isLeftKneeVisible = isLandmarkVisible(leftKnee) && isLandmarkVisible(leftAnkle) && isLandmarkVisible(leftHip);
+    const isRightKneeVisible = isLandmarkVisible(rightKnee) && isLandmarkVisible(rightAnkle) && isLandmarkVisible(rightHip);
 
-    if (
-      !isLandmarkVisible(leftKnee) ||
-      !isLandmarkVisible(leftAnkle) ||
-      !isLandmarkVisible(leftHip) ||
-      !isLandmarkVisible(rightKnee) ||
-      !isLandmarkVisible(rightAnkle) ||
-      !isLandmarkVisible(rightHip)
-    ) {
+    if (!isLeftKneeVisible && !isRightKneeVisible) {
       const msg = '请露出膝盖和脚踝';
       if (msg !== lastText) {
         f7.toast.show({

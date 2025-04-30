@@ -1,13 +1,14 @@
-import { Navbar, Page, Progressbar } from 'framework7-react';
+import { Fab, FabButton, FabButtons, Navbar, Page, Progressbar } from 'framework7-react';
 import { useState, useRef, useEffect } from 'react';
 import { useFakeProgress } from 'react-use-fakeprogress';
-import DeepSquatMain from './components/DeepSquatMain';
+import DeepSquatMain, { Dimensionality } from './components/DeepSquatMain';
 import { Pose } from '@mediapipe/pose';
 
 function DeepSquat() {
   const [loadingModel, setLoadingModel] = useState(true);
   const poseRef = useRef<Pose>();
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const [dimensionality, setDimensionality] = useState<Dimensionality>('2D');
 
   const [progress, start, done] = useFakeProgress(8000);
 
@@ -58,10 +59,17 @@ function DeepSquat() {
               <Progressbar progress={progress * 100} />
             </div>
           ) : (
-            <DeepSquatMain width={size.width} height={size.height} poseRef={poseRef} />
+            <DeepSquatMain width={size.width} height={size.height} poseRef={poseRef} dimensionality={dimensionality} />
           )}
         </div>
       </div>
+      <Fab position="right-bottom" slot="fixed">
+        {dimensionality}
+        <FabButtons position="top">
+          <FabButton fabClose onClick={() => setDimensionality('2D')}>2D</FabButton>
+          <FabButton fabClose onClick={() => setDimensionality('3D')}>3D</FabButton>
+        </FabButtons>
+      </Fab>
     </Page>
   );
 }
